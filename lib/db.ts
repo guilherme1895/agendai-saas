@@ -20,5 +20,5 @@ if (process.env.NODE_ENV !== "production") {
   global.__prisma = db;
 }
 
-// Mantém compatibilidade — não precisa mais de initDB()
+// Mantém compatibilidade — não faz nada, Prisma gerencia a conexão
 export async function initDB() {}

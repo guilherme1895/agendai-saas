@@ -1,73 +1,53 @@
 import { apiHandler, ok } from "@/lib/api";
-import { requireSession } from "@/lib/auth";
-import { ApiError } from "@/lib/auth";
+import { requireSession, ApiError } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ServiceSchema } from "@/lib/validators";
-import type { ServiceRow } from "@/lib/types";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-async function getOwnService(userId: string, id: string): Promise<ServiceRow> {
-  const r = await db.execute({
-    sql: "SELECT * FROM services WHERE id = ? AND user_id = ?",
-    args: [id, userId],
-  });
-  if (!r.rows.length) throw new ApiError(404, "Serviço não encontrado.");
-  return r.rows[0] as unknown as ServiceRow;
+async function getOwn(userId: string, id: string) {
+  const s = await db.service.findFirst({ where: { id, userId } });
+  if (!s) throw new ApiError(404, "Serviço não encontrado.");
+  return s;
 }
 
-// GET /api/services/[id]
 export const GET = apiHandler(async (_, ctx: Ctx) => {
   const session = await requireSession();
   const { id } = await ctx.params;
-  const svc = await getOwnService(session.userId, id);
-  return ok({ service: svc });
+  return ok({ service: await getOwn(session.userId, id) });
 });
 
-// PUT /api/services/[id]
 export const PUT = apiHandler(async (req, ctx: Ctx) => {
   const session = await requireSession();
   const { id } = await ctx.params;
-  await getOwnService(session.userId, id);
+  await getOwn(session.userId, id);
   const data = ServiceSchema.parse(await req.json());
-
-  // Slug único (excluindo o próprio serviço)
-  const slugCheck = await db.execute({
-    sql: "SELECT id FROM services WHERE user_id = ? AND slug = ? AND id != ?",
-    args: [session.userId, data.slug, id],
+  const slugTaken = await db.service.findFirst({
+    where: { userId: session.userId, slug: data.slug, id: { not: id } },
   });
-  if (slugCheck.rows.length > 0) throw new ApiError(409, "Slug já em uso.");
-
-  await db.execute({
-    sql: `UPDATE services SET
-            name=?, description=?, slug=?, color=?, is_active=?, is_public=?,
-            duration_in_minutes=?, buffer_time_before=?, buffer_time_after=?,
-            price=?, currency=?, payment_required=?, is_video_call=?,
-            video_call_provider=?, custom_meeting_url=?,
-            max_advance_booking_days=?, minimum_notice_minutes=?,
-            max_participants=?, position=?, updated_at=datetime('now')
-          WHERE id=? AND user_id=?`,
-    args: [
-      data.name, data.description ?? null, data.slug, data.color,
-      data.isActive ? 1 : 0, data.isPublic ? 1 : 0,
-      data.durationInMinutes, data.bufferTimeBefore, data.bufferTimeAfter,
-      data.price, data.currency, data.paymentRequired ? 1 : 0,
-      data.isVideoCall ? 1 : 0, data.videoCallProvider ?? null,
-      data.customMeetingUrl ?? null, data.maxAdvanceBookingDays ?? null,
-      data.minimumNoticeMinutes ?? null, data.maxParticipants, data.position,
-      id, session.userId,
-    ],
+  if (slugTaken) throw new ApiError(409, "Slug já em uso.");
+  const service = await db.service.update({
+    where: { id },
+    data: {
+      name: data.name, description: data.description ?? null, slug: data.slug,
+      color: data.color, isActive: data.isActive, isPublic: data.isPublic,
+      durationInMinutes: data.durationInMinutes,
+      bufferTimeBefore: data.bufferTimeBefore, bufferTimeAfter: data.bufferTimeAfter,
+      price: data.price, currency: data.currency, paymentRequired: data.paymentRequired,
+      isVideoCall: data.isVideoCall, videoCallProvider: data.videoCallProvider ?? null,
+      customMeetingUrl: data.customMeetingUrl ?? null,
+      maxAdvanceBookingDays: data.maxAdvanceBookingDays ?? null,
+      minimumNoticeMinutes: data.minimumNoticeMinutes ?? null,
+      maxParticipants: data.maxParticipants, position: data.position,
+    },
   });
-
-  const updated = await db.execute({ sql: "SELECT * FROM services WHERE id = ?", args: [id] });
-  return ok({ service: updated.rows[0] });
+  return ok({ service });
 });
 
-// DELETE /api/services/[id]
 export const DELETE = apiHandler(async (_, ctx: Ctx) => {
   const session = await requireSession();
   const { id } = await ctx.params;
-  await getOwnService(session.userId, id);
-  await db.execute({ sql: "DELETE FROM services WHERE id = ? AND user_id = ?", args: [id, session.userId] });
+  await getOwn(session.userId, id);
+  await db.service.delete({ where: { id } });
   return ok({ ok: true });
 });
