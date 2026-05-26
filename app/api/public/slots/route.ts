@@ -15,32 +15,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Parâmetros inválidos." }, { status: 400 });
   }
 
-  // Get provider
-  const userResult = await db.execute({
-    sql: "SELECT id, name, bio FROM users WHERE slug = ?",
-    args: [slug],
-  });
-  if (userResult.rows.length === 0) {
+  // Get provider (Trocado .execute por $queryRaw do Prisma)
+  const users = await db.$queryRaw<any[]>`SELECT id, name, bio FROM users WHERE slug = ${slug}`;
+  
+  if (users.length === 0) {
     return NextResponse.json({ error: "Prestador não encontrado." }, { status: 404 });
   }
-  const user = userResult.rows[0];
+  const user = users[0];
 
   // Get day of week (0=Sun, 1=Mon, ...)
   const [year, month, day] = date.split("-").map(Number);
   const dateObj = new Date(year, month - 1, day);
   const dayOfWeek = dateObj.getDay();
 
-  // Get availability for this day
-  const avResult = await db.execute({
-    sql: "SELECT * FROM availability WHERE user_id = ? AND day_of_week = ?",
-    args: [user.id as string, dayOfWeek],
-  });
+  // Get availability for this day (Trocado .execute por $queryRaw)
+  const avResult = await db.$queryRaw<any[]>`SELECT * FROM availability WHERE user_id = ${user.id} AND day_of_week = ${dayOfWeek}`;
 
-  if (avResult.rows.length === 0) {
+  if (avResult.length === 0) {
     return NextResponse.json({ slots: [], provider: user });
   }
 
-  const av = avResult.rows[0];
+  const av = avResult[0];
   const slotDuration = (av.slot_duration_minutes as number) || 60;
 
   // Generate all possible slots
@@ -50,21 +45,19 @@ export async function GET(req: NextRequest) {
     slotDuration
   );
 
-  // Get already booked slots for this date
-  const bookedResult = await db.execute({
-    sql: "SELECT start_time, end_time FROM appointments WHERE user_id = ? AND date = ? AND status = 'confirmed'",
-    args: [user.id as string, date],
-  });
+  // Get already booked slots for this date (Trocado .execute por $queryRaw)
+  const bookedResult = await db.$queryRaw<any[]>`SELECT start_time, end_time FROM appointments WHERE user_id = ${user.id} AND date = ${date} AND status = 'confirmed'`;
 
-  const booked = bookedResult.rows.map((r) => ({
+  // Prisma retorna o array direto, não precisamos mais do ".rows"
+  const booked = bookedResult.map((r: any) => ({
     start: r.start_time as string,
     end: r.end_time as string,
   }));
 
-  // Filter out booked slots
+  // Filter out booked slots (Adicionado o : any na letra 'b')
   const freeSlots = allSlots.filter((slot) => {
     return !booked.some(
-      (b) =>
+      (b: any) =>
         !(timeToMinutes(slot.end) <= timeToMinutes(b.start) ||
           timeToMinutes(slot.start) >= timeToMinutes(b.end))
     );
