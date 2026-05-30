@@ -1,78 +1,149 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { ArrowRight, Calendar, Users, BarChart3, Clock, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
-export default function Home() {
+// ============================================================================
+// Animations
+// ============================================================================
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+// ============================================================================
+// Components
+// ============================================================================
+
+function BentoCard({
+  title,
+  description,
+  icon: Icon,
+  className,
+}: {
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  className?: string;
+}) {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex flex-col">
-      {/* Header */}
-      <header className="px-6 py-4 flex items-center justify-between border-b border-green-100">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">A</span>
-          </div>
-          <span className="font-bold text-xl text-gray-900">AgendaAí</span>
-        </div>
-        <div className="flex gap-3">
-          <Link
-            href="/auth/login"
-            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-          >
-            Entrar
-          </Link>
-          <Link
-            href="/auth/register"
-            className="px-4 py-2 text-sm font-medium bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-          >
-            Começar grátis
-          </Link>
-        </div>
-      </header>
+    <motion.div
+      variants={fadeIn}
+      className={cn(
+        "relative overflow-hidden rounded-xl border border-border/50 bg-card/50 p-6 backdrop-blur-xl transition-all duration-300 hover:border-primary/50 hover:bg-card/80",
+        className
+      )}
+    >
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon size={24} />
+      </div>
+      <h3 className="mb-2 font-heading text-xl font-semibold tracking-tight text-foreground">
+        {title}
+      </h3>
+      <p className="text-muted-foreground leading-relaxed">
+        {description}
+      </p>
+    </motion.div>
+  );
+}
 
-      {/* Hero */}
-      <section className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-6">
-          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-          Plataforma de agendamentos online
-        </div>
-        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight max-w-3xl">
-          Seus agendamentos,{" "}
-          <span className="text-green-500">simples assim</span>
-        </h1>
-        <p className="text-xl text-gray-500 max-w-xl mb-10">
-          Crie sua página de agendamento em minutos. Deixe seus clientes
-          marcarem horários 24h por dia, sem precisar te ligar.
-        </p>
-        <div className="flex gap-4 flex-wrap justify-center">
-          <Link
-            href="/auth/register"
-            className="px-8 py-4 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-all hover:shadow-lg hover:shadow-green-200 hover:-translate-y-0.5"
-          >
-            Criar minha página grátis →
-          </Link>
-          <Link
-            href="/demo"
-            className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:border-green-300 hover:text-green-600 transition-all"
-          >
-            Ver demonstração
-          </Link>
-        </div>
-      </section>
+export default function LandingPage() {
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-background">
+      {/* Background Effects (Aurora / Blur) */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-[20%] -left-[10%] h-[50%] w-[50%] rounded-full bg-primary/20 blur-[120px]" />
+        <div className="absolute top-[40%] right-[0%] h-[40%] w-[40%] rounded-full bg-indigo-500/10 blur-[100px]" />
+      </div>
 
-      {/* Features */}
-      <section className="px-6 pb-20 max-w-5xl mx-auto w-full">
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            { icon: "📅", title: "Página pública", desc: "Compartilhe um link e seus clientes agendam sozinhos" },
-            { icon: "🔔", title: "Dashboard completo", desc: "Veja todos os agendamentos organizados em um só lugar" },
-            { icon: "⚙️", title: "Configure seus horários", desc: "Defina seus dias e horários de atendimento com facilidade" },
-          ].map((f) => (
-            <div key={f.title} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-3xl mb-3">{f.icon}</div>
-              <h3 className="font-semibold text-gray-900 mb-2">{f.title}</h3>
-              <p className="text-gray-500 text-sm">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <div className="relative z-10 mx-auto max-w-7xl px-6 pt-32 pb-24 sm:px-8 lg:px-12">
+        {/* HERO SECTION */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+          className="flex flex-col items-center text-center"
+        >
+          <motion.div variants={fadeIn} className="mb-6 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+            SaaS de Agendamento Pro Max
+          </motion.div>
+
+          <motion.h1 variants={fadeIn} className="mb-8 font-heading text-5xl font-bold tracking-tight text-foreground sm:text-7xl">
+            A agenda inteligente <br />
+            <span className="bg-gradient-to-r from-primary to-indigo-400 bg-clip-text text-transparent">
+              para quem não tem tempo a perder.
+            </span>
+          </motion.h1>
+
+          <motion.p variants={fadeIn} className="mb-10 max-w-2xl text-lg text-muted-foreground sm:text-xl">
+            Automatize seus agendamentos, reduza ausências e escale seu negócio com um sistema pensado para alta performance.
+          </motion.p>
+
+          <motion.div variants={fadeIn} className="flex flex-col gap-4 sm:flex-row">
+            <Link
+              href="/auth/register"
+              className="group flex items-center justify-center rounded-lg bg-primary px-8 py-4 font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)]"
+            >
+              Começar Gratuitamente
+              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/auth/login"
+              className="flex items-center justify-center rounded-lg border border-border bg-card/50 backdrop-blur px-8 py-4 font-medium text-foreground transition-all duration-200 hover:bg-muted"
+            >
+              Acessar Painel
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {/* BENTO GRID FEATURES */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={staggerContainer}
+          className="mt-32 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          <BentoCard
+            title="Agendamento Inteligente"
+            description="Permita que seus clientes agendem horários de forma autônoma, sem trocas infinitas de mensagens."
+            icon={Calendar}
+            className="sm:col-span-2 lg:col-span-1 lg:row-span-2"
+          />
+          <BentoCard
+            title="Lembretes Automáticos"
+            description="Reduza faltas drasticamente com notificações via WhatsApp, Email e SMS antes de cada sessão."
+            icon={Clock}
+          />
+          <BentoCard
+            title="Mini-CRM Integrado"
+            description="Acompanhe o histórico de cada cliente, anotações e frequência de retornos."
+            icon={Users}
+          />
+          <BentoCard
+            title="Pagamentos e Receitas"
+            description="Cobre antecipadamente com Stripe e tenha previsibilidade de caixa no fim do mês."
+            icon={BarChart3}
+            className="sm:col-span-2"
+          />
+        </motion.div>
+      </div>
     </main>
   );
 }

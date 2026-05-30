@@ -60,11 +60,8 @@ export async function getCurrentUser(): Promise<UserRow | null> {
   const session = await getSession();
   if (!session) return null;
   await initDB();
-  const result = await db.execute({
-    sql: "SELECT * FROM users WHERE id = ?",
-    args: [session.userId],
-  });
-  return (result.rows[0] as unknown as UserRow) ?? null;
+  const result = await db.$queryRaw<UserRow[]>`SELECT * FROM users WHERE id = ${session.userId}`;
+  return result?.[0] ?? null;
 }
 
 // ---------------------------------------------------------------------------
