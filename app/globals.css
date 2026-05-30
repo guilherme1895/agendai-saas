@@ -1,6 +1,22 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --radius-xl: 1rem;
+  --radius-lg: 0.75rem;
+  --radius-md: 0.5rem;
+  --radius-sm: 0.25rem;
+}
 
 @layer base {
   :root {
@@ -13,7 +29,6 @@
     --muted-foreground: #64748b; /* Slate 500 */
     --primary: #4f46e5; /* Indigo 600 */
     --primary-foreground: #ffffff;
-    --radius: 0.75rem;
   }
 
   .dark {
@@ -34,7 +49,10 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* Smooth scrollbar para um feel premium */
@@ -43,12 +61,14 @@
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    background-color: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-full border-[2px] border-solid border-background;
+    background-color: rgba(161, 161, 170, 0.3);
+    border-radius: 9999px;
+    border: 2px solid var(--background);
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
+    background-color: rgba(161, 161, 170, 0.5);
   }
 }
